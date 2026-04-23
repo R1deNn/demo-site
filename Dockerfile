@@ -1,6 +1,6 @@
 # Базовый образ: официальный PHP 8.3 CLI на Debian Bookworm (slim)
 # Используем CLI (не FPM), так как запускаем встроенный сервер: php artisan serve
-FROM php:8.3-cli-bookworm
+FROM php:8.4-cli-bookworm
 
 # Системные зависимости:
 # - libpq-dev — нужна для компиляции pdo_pgsql (PostgreSQL-драйвер)
