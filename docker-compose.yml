@@ -1,0 +1,81 @@
+services:
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # node: собирает фронтенд-ассеты (Tailwind + Vite) один раз и завершается.
+  # Записывает public/build/ в общий bind-mount — app-сервис видит результат.
+  # ─────────────────────────────────────────────────────────────────────────────
+  node:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      # Монтируем весь проект — node пишет в public/build/, которую видит app
+      - .:/app
+      # Изолируем node_modules контейнера — не перезатираем хостовую папку
+      - node_modules:/app/node_modules
+    command: sh -c "npm install && npm run build"
+    # После npm run build этот сервис завершится с кодом 0
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # postgres: PostgreSQL 16
+  # ─────────────────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB:       laravel
+      POSTGRES_USER:     laravel
+      POSTGRES_PASSWORD: secret
+    ports:
+      # Проброс порта позволяет подключиться из хоста (например, через TablePlus)
+      - "5432:5432"
+    volumes:
+      # Именованный volume — данные БД сохраняются между перезапусками
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # app-сервис дождётся этого healthcheck перед стартом
+      test: ["CMD-SHELL", "pg_isready -U laravel -d laravel"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # app: PHP 8.3 — php artisan serve
+  # ─────────────────────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME:    Laravel
+      APP_ENV:     local
+      APP_KEY:     base64:JQk7eYUj9alKv1uBHc+aSNanZ44nWxSm2/e1k8G4A5g=
+      APP_DEBUG:   "true"
+      APP_URL:     http://localhost:8000
+
+      DB_CONNECTION: pgsql
+      DB_HOST:       postgres   # имя сервиса = hostname внутри Docker-сети
+      DB_PORT:       5432
+      DB_DATABASE:   laravel
+      DB_USERNAME:   laravel
+      DB_PASSWORD:   secret
+
+      SESSION_DRIVER: database
+      CACHE_STORE:    database
+      QUEUE_CONNECTION: database
+    volumes:
+      # Bind-mount: изменения в коде видны без пересборки образа
+      - .:/var/www/html
+      # Разделяемые node_modules — app не трогает их, но volume должен совпадать
+      - node_modules:/var/www/html/node_modules
+    depends_on:
+      postgres:
+        # Ждём пока pg_isready вернёт success
+        condition: service_healthy
+      node:
+        # Ждём пока npm run build завершится успешно
+        condition: service_completed_successfully
+
+volumes:
+  postgres_data:
+  node_modules:
