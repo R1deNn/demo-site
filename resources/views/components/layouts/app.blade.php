@@ -28,7 +28,7 @@
         React-аналог: в Next.js это происходит автоматически при импорте
         import '@/styles/globals.css' в _app.tsx.
     --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.ts'])
 </head>
 <body class="h-full bg-gray-50 text-gray-900 antialiased">
 

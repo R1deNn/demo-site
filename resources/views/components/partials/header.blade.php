@@ -42,6 +42,21 @@
                               {{ request()->is('/') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">
                         Каталог
                     </a>
+                    {{--
+                        route('about') — генерирует URL по имени маршрута.
+                        Аналог href="/about" в Next.js <Link>, но устойчив к смене URL.
+                        request()->routeIs('about') — проверяет имя текущего маршрута.
+                    --}}
+                    <a href="{{ route('about') }}"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors
+                              {{ request()->routeIs('about') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">
+                        О нас
+                    </a>
+                    <a href="{{ route('contact') }}"
+                       class="px-3 py-2 rounded-md text-sm font-medium transition-colors
+                              {{ request()->routeIs('contact') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">
+                        Контакты
+                    </a>
                 </nav>
             </div>
 
